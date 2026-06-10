@@ -17,29 +17,28 @@
             align-items: center;
             min-height: 100vh;
             padding: 20px 10px;
-            overflow-x: hidden; /* 防止大圖片撐破手機寬度產生橫向捲軸 */
+            overflow-x: hidden; 
         }
 
         /* 背景顏色切換：紅方 / 藍方 */
         body.turn-red { background-color: #8b0000; }
         body.turn-blue { background-color: #00008b; }
 
-        /* --- 新增：兩側大人物立繪樣式 --- */
+        /* --- 兩側大人物立繪樣式 --- */
         .character-art {
             position: fixed;
-            bottom: 0;           /* 對齊畫面底部 */
-            height: 90vh;        /* 高度佔據螢幕的 90%，顯得人物夠大 */
-            max-width: 45vw;     /* 限制最大寬度，避免在手機版完全遮死中間 */
-            object-fit: contain; /* 保持圖片比例不變形 */
-            pointer-events: none;/* 【關鍵】讓玩家的點擊可以穿透圖片，不會按不到九宮格 */
-            z-index: 0;          /* 放在最底層當背景 */
+            bottom: 0;
+            height: 90vh;
+            max-width: 45vw;
+            object-fit: contain;
+            pointer-events: none; /* 讓玩家的點擊可以穿透圖片 */
+            z-index: 0;
         }
         
-        .char-blue { left: -5%; } /* 藍方放左邊，稍微往左推一點避免太擠 */
-        .char-red { right: -5%; } /* 紅方放右邊 */
+        .char-blue { left: -5%; }
+        .char-red { right: -5%; }
 
-        /* --- 確保 UI 在立繪上方 --- */
-        /* 將所有操作區塊的 z-index 拉高，確保不會被大立繪蓋住而無法點擊 */
+        /* 確保 UI 在立繪上方 */
         #status-board, #game-board, #turn-indicator, #event-log {
             position: relative;
             z-index: 10; 
@@ -52,6 +51,15 @@
             margin-bottom: 10px;
             text-align: center;
         }
+        
+        /* 新增回合數文字樣式 */
+        #round-text {
+            font-size: 18px;
+            color: #ffeb3b; /* 使用亮黃色讓回合數更明顯 */
+            display: block;
+            margin-bottom: 5px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+        }
 
         #event-log {
             font-size: 16px;
@@ -59,7 +67,7 @@
             margin-bottom: 15px;
             min-height: 20px;
             text-align: center;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.8); /* 增加陰影讓文字在圖片上更清楚 */
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
         }
 
         #status-board {
@@ -69,7 +77,7 @@
             max-width: 400px;
             margin-bottom: 20px;
             padding: 10px;
-            background: rgba(0, 0, 0, 0.7); /* 把背景調暗一點，對比更明顯 */
+            background: rgba(0, 0, 0, 0.7);
             border-radius: 10px;
         }
 
@@ -91,7 +99,7 @@
             border-radius: 10px;
             width: 100%;
             max-width: 350px;
-            box-shadow: 0px 5px 15px rgba(0,0,0,0.5); /* 讓盤面浮出來一點 */
+            box-shadow: 0px 5px 15px rgba(0,0,0,0.5);
         }
 
         .ball { width: 80px; height: 80px; border-radius: 50%; margin: 0 auto; box-shadow: 2px 2px 5px rgba(0,0,0,0.3); transition: transform 0.2s; }
@@ -114,7 +122,10 @@
     <img src="blue.png" class="character-art char-blue" alt="藍方角色">
     <img src="red.png" class="character-art char-red" alt="紅方角色">
 
-    <div id="turn-indicator">RRRRRRRR<br>RRRRRRRR</div>
+    <div id="turn-indicator">
+        <span id="round-text">第 1 回合</span>
+        <span id="turn-text">RRRRRRRR<br>RRRRRRRR</span>
+    </div>
     
     <div id="event-log">讀取中...</div>
 
@@ -142,6 +153,7 @@
             blue: { pk: 0, temp: 0, money: 0, viewers: 0 }
         };
         var currentTurn = 'red'; 
+        var currentRound = 1; // 新增：用來記錄目前進行到第幾個回合
         var gridCols = [[], [], []];
 
         var initialMap = [
@@ -150,6 +162,7 @@
             ['yellow', 'red', 'gray', 'blue', 'yellow', 'blue', 'gray', 'red', 'green', 'red', 'blue', 'gray', 'red', 'purple', 'yellow', 'red', 'blue', 'gray', 'gray']
         ];
 
+        // === 遊戲初始化 ===
         function initGrid() {
             gridCols = [
                 initialMap[0].slice(),
@@ -161,6 +174,7 @@
             logEvent("遊戲開始！紅方先手。");
         }
 
+        // === 渲染九宮格 ===
         function renderGrid() {
             var board = document.getElementById('game-board');
             board.innerHTML = '';
@@ -189,15 +203,21 @@
             }
         }
 
+        // 綁定點擊事件的工廠函式
         function createClickHandler(colIndex, ballColor) {
             return function() {
                 handleBallClick(colIndex, ballColor);
             };
         }
 
+        // === 更新 UI 介面 ===
         function updateUI() {
             document.body.className = 'turn-' + currentTurn;
-            var indicator = document.getElementById('turn-indicator');
+            
+            // 更新回合數文字
+            document.getElementById('round-text').innerText = '第 ' + currentRound + ' 回合';
+            // 更新紅藍方標示文字
+            var indicator = document.getElementById('turn-text');
             indicator.innerHTML = currentTurn === 'red' ? 'RRRRRRRR<br>RRRRRRRR' : 'BBBBBBBB<br>BBBBBBBB';
 
             document.getElementById('blue-temp').style.width = Math.min(players.blue.temp, 100) + '%';
@@ -211,6 +231,7 @@
             document.getElementById('event-log').innerText = msg;
         }
 
+        // === 處理卡牌點擊 ===
         function handleBallClick(colIndex, color) {
             var currentPlayer = players[currentTurn];
             var opponentTurn = currentTurn === 'red' ? 'blue' : 'red';
@@ -218,12 +239,12 @@
 
             logEvent("換對手回合..."); 
 
-            // --- 修改區域：套用新的數值設定 ---
+            // --- 數值判定區 ---
             switch (color) {
                 case 'red':
-                    // 紅火箭卡：金錢+100, 觀眾+30000, 己方PK+1, 溫度計+10%
+                    // 【已修改】紅火箭卡：金錢+100, 觀眾+30000, 己方PK+2, 溫度計+10%
                     currentPlayer.money += 100; currentPlayer.viewers += 30000;
-                    currentPlayer.pk += 1; currentPlayer.temp += 10;
+                    currentPlayer.pk += 2; currentPlayer.temp += 10;
                     break;
                 case 'blue':
                     // 藍盾牌卡：金錢+100, 觀眾+10000, 對手PK-1, 溫度計+15%
@@ -232,14 +253,14 @@
                     currentPlayer.temp += 15;
                     break;
                 case 'green':
-                    // 綠愛心卡：金錢+100, 觀眾+10000, PK不變, 溫度計-20% (最低不低於0)
+                    // 綠愛心卡：金錢+100, 觀眾+10000, PK不變, 溫度計-20%
                     currentPlayer.money += 100; currentPlayer.viewers += 10000;
                     currentPlayer.temp = Math.max(0, currentPlayer.temp - 20);
                     break;
                 case 'purple':
-                    // 紫骷髏卡：金錢+100, 觀眾+10000, 己方PK+2, 溫度計+45%
+                    // 【已修改】紫骷髏卡：金錢+100, 觀眾+10000, 己方PK+2, 溫度計+30%
                     currentPlayer.money += 100; currentPlayer.viewers += 10000;
-                    currentPlayer.pk += 2; currentPlayer.temp += 45;
+                    currentPlayer.pk += 2; currentPlayer.temp += 30;
                     break;
                 case 'yellow':
                     // 黃金錢卡：金錢+300, 觀眾+10000, PK不變, 溫度計+5%
@@ -247,22 +268,28 @@
                     currentPlayer.temp += 5;
                     break;
                 case 'gray':
-                    // 灰盲盒卡：隨機效果，維持原本的獨立函式處理
+                    // 灰盲盒卡
                     applyGrayCardEffect(currentPlayer);
                     break;
             }
-            // --- 修改區域結束 ---
 
+            // 移除被點擊的球
             gridCols[colIndex].shift();
+            
+            // 【新增】回合數 +1，並切換對手回合
+            currentRound++; 
             currentTurn = opponentTurn;
+            
             renderGrid();
             updateUI();
 
+            // 延遲執行勝負判定，確保 UI 先完成繪製
             setTimeout(function() {
                 checkWinCondition();
             }, 50);
         }
 
+        // === 灰卡隨機事件 ===
         function applyGrayCardEffect(player) {
             var rand = Math.floor(Math.random() * 100) + 1; 
             var eventName = "";
@@ -286,20 +313,21 @@
             logEvent("🎲 觸發灰盲盒：" + eventName);
         }
 
+        // === 勝負判定 ===
         function checkWinCondition() {
             if (players.red.pk >= 7) {
-                alert("紅方達到 7 分！紅方獲勝！");
+                alert("紅方達到 7 分！紅方獲勝！\n總共進行了 " + (currentRound - 1) + " 個回合。");
                 resetGame(); return;
             } else if (players.blue.pk >= 7) {
-                alert("藍方達到 7 分！藍方獲勝！");
+                alert("藍方達到 7 分！藍方獲勝！\n總共進行了 " + (currentRound - 1) + " 個回合。");
                 resetGame(); return;
             }
             
             if (players.red.temp >= 100) {
-                alert("紅方溫度達到 100% 爆表！藍方獲勝！");
+                alert("紅方溫度達到 100% 爆表！藍方獲勝！\n總共進行了 " + (currentRound - 1) + " 個回合。");
                 resetGame(); return;
             } else if (players.blue.temp >= 100) {
-                alert("藍方溫度達到 100% 爆表！紅方獲勝！");
+                alert("藍方溫度達到 100% 爆表！紅方獲勝！\n總共進行了 " + (currentRound - 1) + " 個回合。");
                 resetGame(); return;
             }
 
@@ -316,10 +344,12 @@
             }
         }
 
+        // === 遊戲重置 ===
         function resetGame() {
             players.red = { pk: 0, temp: 0, money: 0, viewers: 0 };
             players.blue = { pk: 0, temp: 0, money: 0, viewers: 0 };
             currentTurn = 'red';
+            currentRound = 1; // 重新將回合數歸零
             initGrid();
         }
 
