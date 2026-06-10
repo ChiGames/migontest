@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>卡牌機制測試</title>
+    <style>
+        /* --- 基礎排版與重置 --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+
+        body {
+            background-color: #3b5998;
+            color: white;
+            transition: background-color 0.5s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px 10px;
+            overflow-x: hidden; /* 防止大圖片撐破手機寬度產生橫向捲軸 */
+        }
+
+        /* 背景顏色切換：紅方 / 藍方 */
+        body.turn-red { background-color: #8b0000; }
+        body.turn-blue { background-color: #00008b; }
+
+        /* --- 新增：兩側大人物立繪樣式 --- */
+        .character-art {
+            position: fixed;
+            bottom: 0;           /* 對齊畫面底部 */
+            height: 90vh;        /* 高度佔據螢幕的 65%，顯得人物夠大 */
+            max-width: 45vw;     /* 限制最大寬度，避免在手機版完全遮死中間 */
+            object-fit: contain; /* 保持圖片比例不變形 */
+            pointer-events: none;/* 【關鍵】讓玩家的點擊可以穿透圖片，不會按不到九宮格 */
+            z-index: 0;          /* 放在最底層當背景 */
+        }
+        
+        .char-blue { left: -5%; } /* 藍方放左邊，稍微往左推一點避免太擠 */
+        .char-red { right: -5%; } /* 紅方放右邊 */
+
+        /* --- 確保 UI 在立繪上方 --- */
+        /* 將所有操作區塊的 z-index 拉高，確保不會被大立繪蓋住而無法點擊 */
+        #status-board, #game-board, #turn-indicator, #event-log {
+            position: relative;
+            z-index: 10; 
+        }
+
+        /* --- UI 區塊樣式 --- */
+        #turn-indicator {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        #event-log {
+            font-size: 16px;
+            color: #ffff80;
+            margin-bottom: 15px;
+            min-height: 20px;
+            text-align: center;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8); /* 增加陰影讓文字在圖片上更清楚 */
+        }
+
+        #status-board {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.7); /* 把背景調暗一點，對比更明顯 */
+            border-radius: 10px;
+        }
+
+        .player-status { width: 45%; display: flex; flex-direction: column; gap: 10px; }
+        
+        .temp-bar-bg { width: 100%; height: 10px; background-color: #ccc; border-radius: 5px; overflow: hidden; }
+        .temp-bar-fill { height: 100%; width: 0%; transition: width 0.3s ease; }
+        #red-temp { background-color: red; }
+        #blue-temp { background-color: blue; }
+        .stats-text { font-size: 14px; line-height: 1.5; }
+
+        /* --- 遊戲主體九宮格樣式 --- */
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 350px;
+            box-shadow: 0px 5px 15px rgba(0,0,0,0.5); /* 讓盤面浮出來一點 */
+        }
+
+        .ball { width: 80px; height: 80px; border-radius: 50%; margin: 0 auto; box-shadow: 2px 2px 5px rgba(0,0,0,0.3); transition: transform 0.2s; }
+        .inactive { opacity: 0.4; pointer-events: none; }
+        .active { cursor: pointer; opacity: 1; }
+        .active:active { transform: scale(0.9); }
+        .empty-slot { width: 80px; height: 80px; margin: 0 auto; }
+
+        /* 卡牌顏色 */
+        .color-red { background-color: #ff4d4d; border: 2px solid #cc0000; }
+        .color-blue { background-color: #4d4dff; border: 2px solid #0000cc; }
+        .color-green { background-color: #4dff4d; border: 2px solid #00cc00; }
+        .color-purple { background-color: #b366ff; border: 2px solid #6600cc; }
+        .color-yellow { background-color: #ffff4d; border: 2px solid #cccc00; }
+        .color-gray { background-color: #cccccc; border: 2px solid #999999; }
+    </style>
+</head>
+<body>
+
+    <img src="blue.png" class="character-art char-blue" alt="藍方角色">
+    <img src="red.png" class="character-art char-red" alt="紅方角色">
+
+    <div id="turn-indicator">RRRRRRRR<br>RRRRRRRR</div>
+    
+    <div id="event-log">讀取中...</div>
+
+    <div id="status-board">
+        <div class="player-status">
+            <div class="temp-bar-bg"><div id="blue-temp" class="temp-bar-fill"></div></div>
+            <div class="stats-text" id="blue-stats">
+                B PK: 0 / 7<br>溫度: 0%<br>💰: 0<br>👁‍🗨: 0
+            </div>
+        </div>
+        <div class="player-status">
+            <div class="temp-bar-bg"><div id="red-temp" class="temp-bar-fill"></div></div>
+            <div class="stats-text" id="red-stats" style="text-align: right;">
+                R PK: 0 / 7<br>溫度: 0%<br>💰: 0<br>👁‍🗨: 0
+            </div>
+        </div>
+    </div>
+
+    <div id="game-board"></div>
+
+    <script>
+        // 【全域維持 ES5 寫法確保最大相容性】
+        var players = {
+            red: { pk: 0, temp: 0, money: 0, viewers: 0 },
+            blue: { pk: 0, temp: 0, money: 0, viewers: 0 }
+        };
+        var currentTurn = 'red'; 
+        var gridCols = [[], [], []];
+
+        var initialMap = [
+            ['red', 'blue', 'green', 'red', 'red', 'gray', 'gray', 'red', 'green', 'blue', 'purple', 'gray', 'red', 'purple', 'yellow', 'red', 'blue', 'gray', 'purple'],
+            ['blue', 'green', 'red', 'blue', 'red', 'green', 'blue', 'blue', 'yellow', 'purple', 'red', 'yellow', 'blue', 'red', 'gray', 'purple', 'green', 'red', 'purple'],
+            ['yellow', 'red', 'gray', 'blue', 'yellow', 'blue', 'gray', 'red', 'green', 'red', 'blue', 'gray', 'red', 'purple', 'yellow', 'red', 'blue', 'gray', 'gray']
+        ];
+
+        function initGrid() {
+            gridCols = [
+                initialMap[0].slice(),
+                initialMap[1].slice(),
+                initialMap[2].slice()
+            ];
+            renderGrid();
+            updateUI();
+            logEvent("遊戲開始！紅方先手。");
+        }
+
+        function renderGrid() {
+            var board = document.getElementById('game-board');
+            board.innerHTML = '';
+
+            for (var rowUI = 0; rowUI < 3; rowUI++) {
+                for (var col = 0; col < 3; col++) {
+                    var dataIndex = 2 - rowUI; 
+                    var colData = gridCols[col];
+                    var color = colData ? colData[dataIndex] : undefined;
+                    
+                    var cell = document.createElement('div');
+
+                    if (color) {
+                        cell.className = 'ball color-' + color;
+                        if (rowUI === 2) {
+                            cell.className += ' active';
+                            cell.onclick = createClickHandler(col, color);
+                        } else {
+                            cell.className += ' inactive'; 
+                        }
+                    } else {
+                        cell.className = 'empty-slot';
+                    }
+                    board.appendChild(cell);
+                }
+            }
+        }
+
+        function createClickHandler(colIndex, ballColor) {
+            return function() {
+                handleBallClick(colIndex, ballColor);
+            };
+        }
+
+        function updateUI() {
+            document.body.className = 'turn-' + currentTurn;
+            var indicator = document.getElementById('turn-indicator');
+            indicator.innerHTML = currentTurn === 'red' ? 'RRRRRRRR<br>RRRRRRRR' : 'BBBBBBBB<br>BBBBBBBB';
+
+            document.getElementById('blue-temp').style.width = Math.min(players.blue.temp, 100) + '%';
+            document.getElementById('blue-stats').innerHTML = 'B PK: ' + players.blue.pk + ' / 7<br>溫度: ' + players.blue.temp + '%<br>💰: ' + players.blue.money + '<br>👁‍🗨: ' + players.blue.viewers;
+
+            document.getElementById('red-temp').style.width = Math.min(players.red.temp, 100) + '%';
+            document.getElementById('red-stats').innerHTML = 'R PK: ' + players.red.pk + ' / 7<br>溫度: ' + players.red.temp + '%<br>💰: ' + players.red.money + '<br>👁‍🗨: ' + players.red.viewers;
+        }
+
+        function logEvent(msg) {
+            document.getElementById('event-log').innerText = msg;
+        }
+
+        function handleBallClick(colIndex, color) {
+            var currentPlayer = players[currentTurn];
+            var opponentTurn = currentTurn === 'red' ? 'blue' : 'red';
+            var opponentPlayer = players[opponentTurn];
+
+            logEvent("換對手回合..."); 
+
+            switch (color) {
+                case 'red':
+                    currentPlayer.money += 100; currentPlayer.viewers += 30000;
+                    currentPlayer.pk += 1; currentPlayer.temp += 20;
+                    break;
+                case 'blue':
+                    currentPlayer.money += 100; currentPlayer.viewers += 10000;
+                    opponentPlayer.pk = Math.max(0, opponentPlayer.pk - 1);
+                    currentPlayer.temp += 30;
+                    break;
+                case 'green':
+                    currentPlayer.money += 100; currentPlayer.viewers += 10000;
+                    currentPlayer.temp = Math.max(0, currentPlayer.temp - 25);
+                    break;
+                case 'purple':
+                    currentPlayer.money += 100; currentPlayer.viewers += 10000;
+                    currentPlayer.pk += 2; currentPlayer.temp += 45;
+                    break;
+                case 'yellow':
+                    currentPlayer.money += 300; currentPlayer.viewers += 10000;
+                    currentPlayer.temp += 10;
+                    break;
+                case 'gray':
+                    applyGrayCardEffect(currentPlayer);
+                    break;
+            }
+
+            gridCols[colIndex].shift();
+            currentTurn = opponentTurn;
+            renderGrid();
+            updateUI();
+
+            setTimeout(function() {
+                checkWinCondition();
+            }, 50);
+        }
+
+        function applyGrayCardEffect(player) {
+            var rand = Math.floor(Math.random() * 100) + 1; 
+            var eventName = "";
+
+            if (rand <= 35) {
+                eventName = "空箱 (無效果)";
+            } else if (rand <= 55) {
+                eventName = "粉絲打賞 (金錢 +200)";
+                player.money += 200;
+            } else if (rand <= 75) {
+                eventName = "觀眾數量 (金錢 +500, 觀眾 +30000)";
+                player.money += 500;
+                player.viewers += 30000;
+            } else if (rand <= 95) {
+                eventName = "粉絲降溫 (溫度計 -10%)";
+                player.temp = Math.max(0, player.temp - 10);
+            } else {
+                eventName = "升溫 (溫度計 +5%)";
+                player.temp += 5;
+            }
+            logEvent("🎲 觸發灰盲盒：" + eventName);
+        }
+
+        function checkWinCondition() {
+            if (players.red.pk >= 7) {
+                alert("紅方達到 7 分！紅方獲勝！");
+                resetGame(); return;
+            } else if (players.blue.pk >= 7) {
+                alert("藍方達到 7 分！藍方獲勝！");
+                resetGame(); return;
+            }
+            
+            if (players.red.temp >= 100) {
+                alert("紅方溫度達到 100% 爆表！藍方獲勝！");
+                resetGame(); return;
+            } else if (players.blue.temp >= 100) {
+                alert("藍方溫度達到 100% 爆表！紅方獲勝！");
+                resetGame(); return;
+            }
+
+            var remainingBalls = gridCols[0].length + gridCols[1].length + gridCols[2].length;
+            if (remainingBalls === 0) {
+                if (players.red.pk > players.blue.pk) {
+                    alert("球數耗盡！結算分數：紅方獲勝！");
+                } else if (players.blue.pk > players.red.pk) {
+                    alert("球數耗盡！結算分數：藍方獲勝！");
+                } else {
+                    alert("球數耗盡！雙方分數相同，平手！");
+                }
+                resetGame();
+            }
+        }
+
+        function resetGame() {
+            players.red = { pk: 0, temp: 0, money: 0, viewers: 0 };
+            players.blue = { pk: 0, temp: 0, money: 0, viewers: 0 };
+            currentTurn = 'red';
+            initGrid();
+        }
+
+        initGrid();
+    </script>
+</body>
+</html>
