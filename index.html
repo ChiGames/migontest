@@ -28,7 +28,7 @@
         .character-art {
             position: fixed;
             bottom: 0;           /* 對齊畫面底部 */
-            height: 90vh;        /* 高度佔據螢幕的 65%，顯得人物夠大 */
+            height: 90vh;        /* 高度佔據螢幕的 90%，顯得人物夠大 */
             max-width: 45vw;     /* 限制最大寬度，避免在手機版完全遮死中間 */
             object-fit: contain; /* 保持圖片比例不變形 */
             pointer-events: none;/* 【關鍵】讓玩家的點擊可以穿透圖片，不會按不到九宮格 */
@@ -218,32 +218,40 @@
 
             logEvent("換對手回合..."); 
 
+            // --- 修改區域：套用新的數值設定 ---
             switch (color) {
                 case 'red':
+                    // 紅火箭卡：金錢+100, 觀眾+30000, 己方PK+1, 溫度計+10%
                     currentPlayer.money += 100; currentPlayer.viewers += 30000;
-                    currentPlayer.pk += 1; currentPlayer.temp += 20;
+                    currentPlayer.pk += 1; currentPlayer.temp += 10;
                     break;
                 case 'blue':
+                    // 藍盾牌卡：金錢+100, 觀眾+10000, 對手PK-1, 溫度計+15%
                     currentPlayer.money += 100; currentPlayer.viewers += 10000;
                     opponentPlayer.pk = Math.max(0, opponentPlayer.pk - 1);
-                    currentPlayer.temp += 30;
+                    currentPlayer.temp += 15;
                     break;
                 case 'green':
+                    // 綠愛心卡：金錢+100, 觀眾+10000, PK不變, 溫度計-20% (最低不低於0)
                     currentPlayer.money += 100; currentPlayer.viewers += 10000;
-                    currentPlayer.temp = Math.max(0, currentPlayer.temp - 25);
+                    currentPlayer.temp = Math.max(0, currentPlayer.temp - 20);
                     break;
                 case 'purple':
+                    // 紫骷髏卡：金錢+100, 觀眾+10000, 己方PK+2, 溫度計+45%
                     currentPlayer.money += 100; currentPlayer.viewers += 10000;
                     currentPlayer.pk += 2; currentPlayer.temp += 45;
                     break;
                 case 'yellow':
+                    // 黃金錢卡：金錢+300, 觀眾+10000, PK不變, 溫度計+5%
                     currentPlayer.money += 300; currentPlayer.viewers += 10000;
-                    currentPlayer.temp += 10;
+                    currentPlayer.temp += 5;
                     break;
                 case 'gray':
+                    // 灰盲盒卡：隨機效果，維持原本的獨立函式處理
                     applyGrayCardEffect(currentPlayer);
                     break;
             }
+            // --- 修改區域結束 ---
 
             gridCols[colIndex].shift();
             currentTurn = opponentTurn;
