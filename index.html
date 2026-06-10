@@ -39,9 +39,22 @@
         .char-red { right: -5%; }
 
         /* 確保 UI 在立繪上方 */
-        #status-board, #game-board, #turn-indicator, #event-log {
+        #round-display, #status-board, #game-board, #turn-indicator, #event-log {
             position: relative;
             z-index: 10; 
+        }
+
+        /* --- 新增：獨立顯眼的回合數顯示區塊 --- */
+        #round-display {
+            font-size: 26px;
+            font-weight: bold;
+            color: #ffffff;
+            background-color: rgba(0, 0, 0, 0.6); /* 半透明黑底讓文字更清楚 */
+            padding: 8px 25px;
+            border-radius: 25px; /* 圓角膠囊狀 */
+            margin-bottom: 15px;
+            border: 2px solid #ffeb3b; /* 亮黃色外框 */
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.5); /* 增加立體感 */
         }
 
         /* --- UI 區塊樣式 --- */
@@ -50,15 +63,6 @@
             font-weight: bold;
             margin-bottom: 10px;
             text-align: center;
-        }
-        
-        /* 新增回合數文字樣式 */
-        #round-text {
-            font-size: 18px;
-            color: #ffeb3b; /* 使用亮黃色讓回合數更明顯 */
-            display: block;
-            margin-bottom: 5px;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
         }
 
         #event-log {
@@ -122,10 +126,9 @@
     <img src="blue.png" class="character-art char-blue" alt="藍方角色">
     <img src="red.png" class="character-art char-red" alt="紅方角色">
 
-    <div id="turn-indicator">
-        <span id="round-text">第 1 回合</span>
-        <span id="turn-text">RRRRRRRR<br>RRRRRRRR</span>
-    </div>
+    <div id="round-display">第 1 回合</div>
+
+    <div id="turn-indicator">RRRRRRRR<br>RRRRRRRR</div>
     
     <div id="event-log">讀取中...</div>
 
@@ -153,7 +156,7 @@
             blue: { pk: 0, temp: 0, money: 0, viewers: 0 }
         };
         var currentTurn = 'red'; 
-        var currentRound = 1; // 新增：用來記錄目前進行到第幾個回合
+        var currentRound = 1; // 記錄目前進行到第幾個回合
         var gridCols = [[], [], []];
 
         var initialMap = [
@@ -214,10 +217,11 @@
         function updateUI() {
             document.body.className = 'turn-' + currentTurn;
             
-            // 更新回合數文字
-            document.getElementById('round-text').innerText = '第 ' + currentRound + ' 回合';
+            // 【將回合數獨立更新到畫面上方的標籤中】
+            document.getElementById('round-display').innerText = '第 ' + currentRound + ' 回合';
+            
             // 更新紅藍方標示文字
-            var indicator = document.getElementById('turn-text');
+            var indicator = document.getElementById('turn-indicator');
             indicator.innerHTML = currentTurn === 'red' ? 'RRRRRRRR<br>RRRRRRRR' : 'BBBBBBBB<br>BBBBBBBB';
 
             document.getElementById('blue-temp').style.width = Math.min(players.blue.temp, 100) + '%';
@@ -242,7 +246,7 @@
             // --- 數值判定區 ---
             switch (color) {
                 case 'red':
-                    // 【已修改】紅火箭卡：金錢+100, 觀眾+30000, 己方PK+2, 溫度計+10%
+                    // 紅火箭卡：金錢+100, 觀眾+30000, 己方PK+2, 溫度計+10%
                     currentPlayer.money += 100; currentPlayer.viewers += 30000;
                     currentPlayer.pk += 2; currentPlayer.temp += 10;
                     break;
@@ -258,7 +262,7 @@
                     currentPlayer.temp = Math.max(0, currentPlayer.temp - 20);
                     break;
                 case 'purple':
-                    // 【已修改】紫骷髏卡：金錢+100, 觀眾+10000, 己方PK+2, 溫度計+30%
+                    // 紫骷髏卡：金錢+100, 觀眾+10000, 己方PK+2, 溫度計+30%
                     currentPlayer.money += 100; currentPlayer.viewers += 10000;
                     currentPlayer.pk += 2; currentPlayer.temp += 30;
                     break;
@@ -276,7 +280,7 @@
             // 移除被點擊的球
             gridCols[colIndex].shift();
             
-            // 【新增】回合數 +1，並切換對手回合
+            // 回合數 +1，並切換對手回合
             currentRound++; 
             currentTurn = opponentTurn;
             
