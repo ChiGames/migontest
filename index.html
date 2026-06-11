@@ -20,164 +20,428 @@
             overflow-x: hidden; 
         }
 
-        /* 背景顏色切換：紅方 / 藍方 */
         body.turn-red { background-color: #8b0000; }
         body.turn-blue { background-color: #00008b; }
 
-        /* --- 兩側大人物立繪樣式 --- */
-        .character-art {
+        /* --- 遊戲開始選單介面 --- */
+        #start-screen {
             position: fixed;
-            bottom: 0;
-            height: 90vh;
-            max-width: 45vw;
-            object-fit: contain;
-            pointer-events: none; /* 讓玩家的點擊可以穿透圖片 */
-            z-index: 0;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: rgba(20, 30, 60, 0.95);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
         }
+
+        #start-screen h1 { font-size: 32px; color: #ffeb3b; margin-bottom: 30px; text-shadow: 2px 2px 5px black; }
         
-        .char-blue { left: -5%; }
-        .char-red { right: -5%; }
+        .menu-btn {
+            width: 80%; max-width: 300px;
+            padding: 15px; margin: 10px 0;
+            font-size: 20px; font-weight: bold; color: white;
+            background-color: #4CAF50; border: 2px solid #388E3C;
+            border-radius: 10px; cursor: pointer;
+            box-shadow: 0px 4px 6px rgba(0,0,0,0.5);
+        }
+        .menu-btn:active { transform: scale(0.95); }
+        .menu-btn.red-btn { background-color: #f44336; border-color: #d32f2f; }
+        .menu-btn.blue-btn { background-color: #2196F3; border-color: #1976d2; }
+        .menu-btn.setting-btn { background-color: #607d8b; border-color: #455a64; margin-top: 30px; }
+
+        /* --- 開發者模式面板 --- */
+        #dev-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: #222;
+            z-index: 200;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-y: auto; /* 允許上下滑動 */
+        }
+
+        #dev-screen h2 { color: #ffeb3b; margin-bottom: 20px; }
+        
+        .dev-group {
+            width: 100%; max-width: 350px;
+            background: rgba(255,255,255,0.1);
+            padding: 15px; margin-bottom: 15px;
+            border-radius: 8px;
+        }
+        .dev-group h3 { margin-bottom: 10px; font-size: 18px; border-bottom: 1px solid #555; padding-bottom: 5px; }
+        
+        .dev-item {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .dev-item input {
+            width: 60px; padding: 5px; text-align: center; border-radius: 5px; border: 1px solid #ccc;
+        }
+
+        .dev-actions { display: flex; gap: 10px; width: 100%; max-width: 350px; margin-bottom: 30px; }
+        .dev-actions button { flex: 1; padding: 12px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; border: none; }
+        .btn-save { background-color: #4CAF50; color: white; }
+        .btn-cancel { background-color: #f44336; color: white; }
+
+        /* --- 遊戲主畫面容器 --- */
+        #game-container {
+            display: none; 
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        /* 兩側大人物立繪 */
+        .character-art {
+            position: fixed; top: 20px; height: 50vh; max-width: 35vw;
+            object-fit: contain; pointer-events: none; z-index: 0; opacity: 0.9;
+        }
+        .char-blue { left: 5px; }
+        .char-red { right: 5px; }
 
         /* 確保 UI 在立繪上方 */
-        #round-display, #status-board, #game-board, #turn-indicator, #event-log {
-            position: relative;
-            z-index: 10; 
+        #round-display, #status-board, #game-board, #turn-indicator, #event-log, #skills-container {
+            position: relative; z-index: 10; 
         }
 
-        /* --- 新增：獨立顯眼的回合數顯示區塊 --- */
         #round-display {
-            font-size: 26px;
-            font-weight: bold;
-            color: #ffffff;
-            background-color: rgba(0, 0, 0, 0.6); /* 半透明黑底讓文字更清楚 */
-            padding: 8px 25px;
-            border-radius: 25px; /* 圓角膠囊狀 */
-            margin-bottom: 15px;
-            border: 2px solid #ffeb3b; /* 亮黃色外框 */
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.5); /* 增加立體感 */
+            font-size: 26px; font-weight: bold; color: #ffffff;
+            background-color: rgba(0, 0, 0, 0.6); padding: 8px 25px; border-radius: 25px;
+            margin-bottom: 15px; border: 2px solid #ffeb3b; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.5);
         }
 
-        /* --- UI 區塊樣式 --- */
-        #turn-indicator {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 10px;
-            text-align: center;
-        }
-
-        #event-log {
-            font-size: 16px;
-            color: #ffff80;
-            margin-bottom: 15px;
-            min-height: 20px;
-            text-align: center;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
-        }
+        #turn-indicator { font-size: 24px; font-weight: bold; margin-bottom: 10px; text-align: center; }
+        #event-log { font-size: 16px; color: #ffff80; margin-bottom: 15px; min-height: 20px; text-align: center; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); }
 
         #status-board {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            max-width: 400px;
-            margin-bottom: 20px;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            border-radius: 10px;
+            display: flex; justify-content: space-between; width: 100%; max-width: 400px;
+            margin-bottom: 20px; padding: 10px; background: rgba(0, 0, 0, 0.7); border-radius: 10px;
         }
-
         .player-status { width: 45%; display: flex; flex-direction: column; gap: 10px; }
-        
         .temp-bar-bg { width: 100%; height: 10px; background-color: #ccc; border-radius: 5px; overflow: hidden; }
         .temp-bar-fill { height: 100%; width: 0%; transition: width 0.3s ease; }
         #red-temp { background-color: red; }
         #blue-temp { background-color: blue; }
         .stats-text { font-size: 14px; line-height: 1.5; }
 
-        /* --- 遊戲主體九宮格樣式 --- */
         #game-board {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            width: 100%;
-            max-width: 350px;
-            box-shadow: 0px 5px 15px rgba(0,0,0,0.5);
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; background-color: white;
+            padding: 20px; border-radius: 10px; width: 100%; max-width: 350px; box-shadow: 0px 5px 15px rgba(0,0,0,0.5);
         }
-
         .ball { width: 80px; height: 80px; border-radius: 50%; margin: 0 auto; box-shadow: 2px 2px 5px rgba(0,0,0,0.3); transition: transform 0.2s; }
         .inactive { opacity: 0.4; pointer-events: none; }
         .active { cursor: pointer; opacity: 1; }
         .active:active { transform: scale(0.9); }
         .empty-slot { width: 80px; height: 80px; margin: 0 auto; }
 
-        /* 卡牌顏色 */
         .color-red { background-color: #ff4d4d; border: 2px solid #cc0000; }
         .color-blue { background-color: #4d4dff; border: 2px solid #0000cc; }
         .color-green { background-color: #4dff4d; border: 2px solid #00cc00; }
         .color-purple { background-color: #b366ff; border: 2px solid #6600cc; }
         .color-yellow { background-color: #ffff4d; border: 2px solid #cccc00; }
         .color-gray { background-color: #cccccc; border: 2px solid #999999; }
+
+        #skills-container { display: flex; justify-content: space-between; width: 100%; max-width: 350px; margin-top: 20px; gap: 10px; }
+        .skill-btn {
+            flex: 1; padding: 12px 5px; font-size: 15px; font-weight: bold; color: white;
+            background-color: #ff9800; border: 2px solid #e65100; border-radius: 8px; cursor: pointer;
+            box-shadow: 0px 4px 6px rgba(0,0,0,0.3); text-shadow: 1px 1px 2px rgba(0,0,0,0.5); transition: all 0.2s;
+        }
+        .skill-btn:active { transform: scale(0.95); box-shadow: 0px 2px 3px rgba(0,0,0,0.3); }
+        .skill-btn:disabled { background-color: #666; border-color: #444; color: #aaa; cursor: not-allowed; transform: scale(1); }
     </style>
 </head>
 <body>
 
-    <img src="blue.png" class="character-art char-blue" alt="藍方角色">
-    <img src="red.png" class="character-art char-red" alt="紅方角色">
-
-    <div id="round-display">第 1 回合</div>
-
-    <div id="turn-indicator">RRRRRRRR<br>RRRRRRRR</div>
-    
-    <div id="event-log">讀取中...</div>
-
-    <div id="status-board">
-        <div class="player-status">
-            <div class="temp-bar-bg"><div id="blue-temp" class="temp-bar-fill"></div></div>
-            <div class="stats-text" id="blue-stats">
-                B PK: 0 / 7<br>溫度: 0%<br>💰: 0<br>👁‍🗨: 0
-            </div>
+    <div id="start-screen">
+        <h1>卡牌對戰測試</h1>
+        <div id="mode-selection">
+            <button class="menu-btn" onclick="startGame('pvp')">雙人本地對戰</button>
+            <button class="menu-btn" onclick="showSideSelection()">單人挑戰 AI</button>
+            <button class="menu-btn setting-btn" onclick="openDevMode()">⚙️ 開發者設定</button>
         </div>
-        <div class="player-status">
-            <div class="temp-bar-bg"><div id="red-temp" class="temp-bar-fill"></div></div>
-            <div class="stats-text" id="red-stats" style="text-align: right;">
-                R PK: 0 / 7<br>溫度: 0%<br>💰: 0<br>👁‍🗨: 0
-            </div>
+        <div id="side-selection" style="display: none;">
+            <h2>請選擇你的陣營</h2>
+            <button class="menu-btn red-btn" onclick="startGame('pve', 'red')">扮演 紅方 (先手)</button>
+            <button class="menu-btn blue-btn" onclick="startGame('pve', 'blue')">扮演 藍方 (後手)</button>
+            <button class="menu-btn setting-btn" onclick="resetGame()">返回</button>
         </div>
     </div>
 
-    <div id="game-board"></div>
+    <div id="dev-screen">
+        <h2>🔧 開發者模式</h2>
+        
+        <div class="dev-group">
+            <h3>基礎條件設定</h3>
+            <div class="dev-item"><span>🏆 勝負分數線</span><input type="number" id="dev-winPk"></div>
+            <div class="dev-item"><span>🔥 爆表溫度線</span><input type="number" id="dev-loseTemp"></div>
+        </div>
+
+        <div class="dev-group">
+            <h3>初始機率設定 (%)</h3>
+            <div class="dev-item"><span>🔴 紅卡機率</span><input type="number" id="dev-pRed"></div>
+            <div class="dev-item"><span>🟢 綠卡機率</span><input type="number" id="dev-pGreen"></div>
+            <div class="dev-item"><span>🟣 紫卡機率</span><input type="number" id="dev-pPurple"></div>
+            <div class="dev-item"><span>🟡 黃卡機率</span><input type="number" id="dev-pYellow"></div>
+            <div class="dev-item"><span>🔵 藍卡機率</span><input type="number" id="dev-pBlue"></div>
+            <div class="dev-item"><span>⚪ 灰卡機率</span><input type="number" id="dev-pGray"></div>
+            <p style="font-size:12px; color:#aaa; margin-top:5px;">註: 25回合後紫卡與綠卡機率變化邏輯維持動態覆蓋。</p>
+        </div>
+
+        <div class="dev-group">
+            <h3>卡牌數值設定 (一)</h3>
+            <div class="dev-item"><span>🔴 紅卡：獲得分數 (PK)</span><input type="number" id="dev-redPk"></div>
+            <div class="dev-item"><span>🔴 紅卡：增加溫度 (%)</span><input type="number" id="dev-redTemp"></div>
+            <hr style="border-color:#555; margin:10px 0;">
+            <div class="dev-item"><span>🟢 綠卡：增減溫度 (%)</span><input type="number" id="dev-greenTemp"></div>
+            <hr style="border-color:#555; margin:10px 0;">
+            <div class="dev-item"><span>🔵 藍卡：自己增減溫度 (%)</span><input type="number" id="dev-blueTemp"></div>
+            <div class="dev-item"><span>🔵 藍卡：對手增加溫度 (%)</span><input type="number" id="dev-blueOppTemp"></div>
+            <hr style="border-color:#555; margin:10px 0;">
+            <div class="dev-item"><span>🟣 紫卡：增加溫度 (%)</span><input type="number" id="dev-purpleTemp"></div>
+        </div>
+
+        <div class="dev-group">
+            <h3>黃/灰卡與技能設定</h3>
+            <div class="dev-item"><span>🟡 黃卡：獲得金錢</span><input type="number" id="dev-yellowMoney"></div>
+            <hr style="border-color:#555; margin:10px 0;">
+            <div class="dev-item"><span>⚪ 灰卡：降溫事件降幅 (%)</span><input type="number" id="dev-grayTempDown"></div>
+            <div class="dev-item"><span>⚪ 灰卡：升溫事件升幅 (%)</span><input type="number" id="dev-grayTempUp"></div>
+            <hr style="border-color:#555; margin:10px 0;">
+            <div class="dev-item"><span>🎬 導演改命：花費金錢</span><input type="number" id="dev-skillDestroyCost"></div>
+            <div class="dev-item"><span>❄️ 粉絲降溫：花費金錢</span><input type="number" id="dev-skillCooldownCost"></div>
+            <div class="dev-item"><span>❄️ 粉絲降溫：降溫幅度 (%)</span><input type="number" id="dev-skillCooldownEffect"></div>
+        </div>
+
+        <div class="dev-actions">
+            <button class="btn-cancel" onclick="closeDevMode()">取消</button>
+            <button class="btn-save" onclick="saveDevConfig()">保存設定</button>
+        </div>
+    </div>
+
+    <div id="game-container">
+        <img src="blue.png" class="character-art char-blue" alt="藍方角色">
+        <img src="red.png" class="character-art char-red" alt="紅方角色">
+
+        <div id="round-display">第 1 回合</div>
+        <div id="turn-indicator">RRRRRRRR<br>RRRRRRRR</div>
+        <div id="event-log">讀取中...</div>
+
+        <div id="status-board">
+            <div class="player-status">
+                <div class="temp-bar-bg"><div id="blue-temp" class="temp-bar-fill"></div></div>
+                <div class="stats-text" id="blue-stats">
+                    B PK: 0 / 7<br>溫度: 0%<br>💰: 0<br>👁‍🗨: 0
+                </div>
+            </div>
+            <div class="player-status">
+                <div class="temp-bar-bg"><div id="red-temp" class="temp-bar-fill"></div></div>
+                <div class="stats-text" id="red-stats" style="text-align: right;">
+                    R PK: 0 / 7<br>溫度: 0%<br>💰: 0<br>👁‍🗨: 0
+                </div>
+            </div>
+        </div>
+
+        <div id="game-board"></div>
+
+        <div id="skills-container">
+            <button id="skill-destroy" class="skill-btn" onclick="useSkillDestroy(false)">導演改命 ($1000)</button>
+            <button id="skill-cooldown" class="skill-btn" onclick="useSkillCooldown(false)">粉絲降溫 ($700)</button>
+        </div>
+    </div>
 
     <script>
-        // 【全域維持 ES5 寫法確保最大相容性】
+        // ==========================================
+        //         全域遊戲設定 (供開發者模式修改)
+        // ==========================================
+        var gameConfig = {
+            winPk: 7,               
+            loseTemp: 100,          
+            redPk: 1,               
+            redTemp: 20,            
+            greenTemp: -25,         
+            blueTemp: -10,          
+            blueOppTemp: 15,        
+            purpleTemp: 45,         
+            
+            // 新增變數
+            yellowMoney: 300,            // 黃卡金錢
+            grayTempDown: 10,            // 灰卡降溫幅度
+            grayTempUp: 5,               // 灰卡升溫幅度
+            skillDestroyCost: 1000,      // 導演改命花費
+            skillCooldownCost: 700,      // 粉絲降溫花費
+            skillCooldownEffect: 10,     // 粉絲降溫幅度
+            
+            probs: {                
+                red: 30, green: 20, purple: 10, yellow: 15, blue: 10, gray: 15
+            }
+        };
+
         var players = {
             red: { pk: 0, temp: 0, money: 0, viewers: 0 },
             blue: { pk: 0, temp: 0, money: 0, viewers: 0 }
         };
         var currentTurn = 'red'; 
-        var currentRound = 1; // 記錄目前進行到第幾個回合
+        var currentRound = 1; 
         var gridCols = [[], [], []];
+        var isDestroyMode = false; 
 
-        var initialMap = [
-            ['red', 'blue', 'green', 'red', 'red', 'gray', 'gray', 'red', 'green', 'blue', 'purple', 'gray', 'red', 'purple', 'yellow', 'red', 'blue', 'gray', 'purple'],
-            ['blue', 'green', 'red', 'blue', 'red', 'green', 'blue', 'blue', 'yellow', 'purple', 'red', 'yellow', 'blue', 'red', 'gray', 'purple', 'green', 'red', 'purple'],
-            ['yellow', 'red', 'gray', 'blue', 'yellow', 'blue', 'gray', 'red', 'green', 'red', 'blue', 'gray', 'red', 'purple', 'yellow', 'red', 'blue', 'gray', 'gray']
-        ];
+        var gameMode = 'pvp'; 
+        var humanSide = null;
+        var aiSide = null;
+        var aiTimeout = null; 
 
-        // === 遊戲初始化 ===
+        // === 開發者模式 UI 控制 ===
+        function openDevMode() {
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('dev-screen').style.display = 'flex';
+            
+            document.getElementById('dev-winPk').value = gameConfig.winPk;
+            document.getElementById('dev-loseTemp').value = gameConfig.loseTemp;
+            document.getElementById('dev-pRed').value = gameConfig.probs.red;
+            document.getElementById('dev-pGreen').value = gameConfig.probs.green;
+            document.getElementById('dev-pPurple').value = gameConfig.probs.purple;
+            document.getElementById('dev-pYellow').value = gameConfig.probs.yellow;
+            document.getElementById('dev-pBlue').value = gameConfig.probs.blue;
+            document.getElementById('dev-pGray').value = gameConfig.probs.gray;
+            
+            document.getElementById('dev-redPk').value = gameConfig.redPk;
+            document.getElementById('dev-redTemp').value = gameConfig.redTemp;
+            document.getElementById('dev-greenTemp').value = gameConfig.greenTemp;
+            document.getElementById('dev-blueTemp').value = gameConfig.blueTemp;
+            document.getElementById('dev-blueOppTemp').value = gameConfig.blueOppTemp;
+            document.getElementById('dev-purpleTemp').value = gameConfig.purpleTemp;
+
+            // 綁定新增的輸入框
+            document.getElementById('dev-yellowMoney').value = gameConfig.yellowMoney;
+            document.getElementById('dev-grayTempDown').value = gameConfig.grayTempDown;
+            document.getElementById('dev-grayTempUp').value = gameConfig.grayTempUp;
+            document.getElementById('dev-skillDestroyCost').value = gameConfig.skillDestroyCost;
+            document.getElementById('dev-skillCooldownCost').value = gameConfig.skillCooldownCost;
+            document.getElementById('dev-skillCooldownEffect').value = gameConfig.skillCooldownEffect;
+        }
+
+        function closeDevMode() {
+            document.getElementById('dev-screen').style.display = 'none';
+            document.getElementById('start-screen').style.display = 'flex';
+        }
+
+        function saveDevConfig() {
+            gameConfig.winPk = parseInt(document.getElementById('dev-winPk').value) || 7;
+            gameConfig.loseTemp = parseInt(document.getElementById('dev-loseTemp').value) || 100;
+            
+            gameConfig.probs.red = parseInt(document.getElementById('dev-pRed').value) || 30;
+            gameConfig.probs.green = parseInt(document.getElementById('dev-pGreen').value) || 20;
+            gameConfig.probs.purple = parseInt(document.getElementById('dev-pPurple').value) || 10;
+            gameConfig.probs.yellow = parseInt(document.getElementById('dev-pYellow').value) || 15;
+            gameConfig.probs.blue = parseInt(document.getElementById('dev-pBlue').value) || 10;
+            gameConfig.probs.gray = parseInt(document.getElementById('dev-pGray').value) || 15;
+
+            gameConfig.redPk = parseInt(document.getElementById('dev-redPk').value) || 1;
+            gameConfig.redTemp = parseInt(document.getElementById('dev-redTemp').value) || 20;
+            gameConfig.greenTemp = parseInt(document.getElementById('dev-greenTemp').value) || -25;
+            gameConfig.blueTemp = parseInt(document.getElementById('dev-blueTemp').value) || -10;
+            gameConfig.blueOppTemp = parseInt(document.getElementById('dev-blueOppTemp').value) || 15;
+            gameConfig.purpleTemp = parseInt(document.getElementById('dev-purpleTemp').value) || 45;
+
+            // 儲存新增的設定數值
+            gameConfig.yellowMoney = parseInt(document.getElementById('dev-yellowMoney').value) || 300;
+            gameConfig.grayTempDown = parseInt(document.getElementById('dev-grayTempDown').value) || 10;
+            gameConfig.grayTempUp = parseInt(document.getElementById('dev-grayTempUp').value) || 5;
+            gameConfig.skillDestroyCost = parseInt(document.getElementById('dev-skillDestroyCost').value) || 1000;
+            gameConfig.skillCooldownCost = parseInt(document.getElementById('dev-skillCooldownCost').value) || 700;
+            gameConfig.skillCooldownEffect = parseInt(document.getElementById('dev-skillCooldownEffect').value) || 10;
+
+            alert("開發者設定已儲存！");
+            closeDevMode();
+        }
+
+        // === 介面切換函式 ===
+        function showSideSelection() {
+            document.getElementById('mode-selection').style.display = 'none';
+            document.getElementById('side-selection').style.display = 'block';
+        }
+
+        function startGame(mode, playerSide) {
+            gameMode = mode;
+            if (mode === 'pve') {
+                humanSide = playerSide;
+                aiSide = (playerSide === 'red') ? 'blue' : 'red';
+            } else {
+                humanSide = null;
+                aiSide = null;
+            }
+            
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('game-container').style.display = 'flex';
+            
+            initGrid();
+        }
+
+        function getRandomColor(round) {
+            var rand = Math.floor(Math.random() * 100) + 1; 
+            var isLateGame = (round > 25);
+            
+            var redP = gameConfig.probs.red;
+            var greenP = isLateGame ? 10 : gameConfig.probs.green; 
+            var purpleP = isLateGame ? 20 : gameConfig.probs.purple; 
+            var yellowP = gameConfig.probs.yellow;
+            var blueP = gameConfig.probs.blue;
+
+            if (rand <= redP) return 'red';
+            else if (rand <= redP + greenP) return 'green';
+            else if (rand <= redP + greenP + purpleP) return 'purple';
+            else if (rand <= redP + greenP + purpleP + yellowP) return 'yellow';
+            else if (rand <= redP + greenP + purpleP + yellowP + blueP) return 'blue';
+            else return 'gray';
+        }
+
+        function consumeAndSpawnBall(colIndex) {
+            gridCols[colIndex].shift(); 
+            var hasRed = false;
+            for (var c = 0; c < 3; c++) {
+                for (var r = 0; r < gridCols[c].length; r++) {
+                    if (gridCols[c][r] === 'red') hasRed = true;
+                }
+            }
+            if (!hasRed) {
+                gridCols[colIndex].push('red');
+            } else {
+                gridCols[colIndex].push(getRandomColor(currentRound));
+            }
+        }
+
         function initGrid() {
-            gridCols = [
-                initialMap[0].slice(),
-                initialMap[1].slice(),
-                initialMap[2].slice()
-            ];
+            gridCols = [[], [], []];
+            for (var col = 0; col < 3; col++) {
+                for (var i = 0; i < 3; i++) {
+                    gridCols[col].push(getRandomColor(currentRound));
+                }
+            }
+
+            var hasRed = false;
+            for (var c = 0; c < 3; c++) {
+                for (var r = 0; r < 3; r++) {
+                    if (gridCols[c][r] === 'red') hasRed = true;
+                }
+            }
+            if (!hasRed) gridCols[Math.floor(Math.random() * 3)][Math.floor(Math.random() * 3)] = 'red';
+
             renderGrid();
             updateUI();
             logEvent("遊戲開始！紅方先手。");
+
+            if (gameMode === 'pve' && currentTurn === aiSide) {
+                logEvent("🤖 AI 分析盤面中...");
+                aiTimeout = setTimeout(executeAITurn, 1500);
+            }
         }
 
-        // === 渲染九宮格 ===
         function renderGrid() {
             var board = document.getElementById('game-board');
             board.innerHTML = '';
@@ -185,179 +449,288 @@
             for (var rowUI = 0; rowUI < 3; rowUI++) {
                 for (var col = 0; col < 3; col++) {
                     var dataIndex = 2 - rowUI; 
-                    var colData = gridCols[col];
-                    var color = colData ? colData[dataIndex] : undefined;
-                    
+                    var color = gridCols[col][dataIndex];
                     var cell = document.createElement('div');
 
                     if (color) {
                         cell.className = 'ball color-' + color;
                         if (rowUI === 2) {
                             cell.className += ' active';
-                            cell.onclick = createClickHandler(col, color);
+                            cell.onclick = createClickHandler(col, color, false);
                         } else {
                             cell.className += ' inactive'; 
                         }
-                    } else {
-                        cell.className = 'empty-slot';
                     }
                     board.appendChild(cell);
                 }
             }
         }
 
-        // 綁定點擊事件的工廠函式
-        function createClickHandler(colIndex, ballColor) {
-            return function() {
-                handleBallClick(colIndex, ballColor);
-            };
+        function createClickHandler(colIndex, ballColor, isAI) {
+            return function() { handleBallClick(colIndex, ballColor, isAI); };
         }
 
-        // === 更新 UI 介面 ===
         function updateUI() {
             document.body.className = 'turn-' + currentTurn;
+            var currentPlayerObj = players[currentTurn];
+            var isAITurn = (gameMode === 'pve' && currentTurn === aiSide); 
             
-            // 【將回合數獨立更新到畫面上方的標籤中】
             document.getElementById('round-display').innerText = '第 ' + currentRound + ' 回合';
-            
-            // 更新紅藍方標示文字
             var indicator = document.getElementById('turn-indicator');
             indicator.innerHTML = currentTurn === 'red' ? 'RRRRRRRR<br>RRRRRRRR' : 'BBBBBBBB<br>BBBBBBBB';
 
-            document.getElementById('blue-temp').style.width = Math.min(players.blue.temp, 100) + '%';
-            document.getElementById('blue-stats').innerHTML = 'B PK: ' + players.blue.pk + ' / 7<br>溫度: ' + players.blue.temp + '%<br>💰: ' + players.blue.money + '<br>👁‍🗨: ' + players.blue.viewers;
+            document.getElementById('blue-temp').style.width = Math.min(players.blue.temp, gameConfig.loseTemp) + '%';
+            document.getElementById('blue-stats').innerHTML = 'B PK: ' + players.blue.pk + ' / ' + gameConfig.winPk + '<br>溫度: ' + players.blue.temp + '%<br>💰: ' + players.blue.money + '<br>👁‍🗨: ' + players.blue.viewers;
 
-            document.getElementById('red-temp').style.width = Math.min(players.red.temp, 100) + '%';
-            document.getElementById('red-stats').innerHTML = 'R PK: ' + players.red.pk + ' / 7<br>溫度: ' + players.red.temp + '%<br>💰: ' + players.red.money + '<br>👁‍🗨: ' + players.red.viewers;
+            document.getElementById('red-temp').style.width = Math.min(players.red.temp, gameConfig.loseTemp) + '%';
+            document.getElementById('red-stats').innerHTML = 'R PK: ' + players.red.pk + ' / ' + gameConfig.winPk + '<br>溫度: ' + players.red.temp + '%<br>💰: ' + players.red.money + '<br>👁‍🗨: ' + players.red.viewers;
+
+            // 動態更新按鈕文字，顯示設定好的價錢
+            document.getElementById('skill-destroy').innerText = "導演改命 ($" + gameConfig.skillDestroyCost + ")";
+            document.getElementById('skill-cooldown').innerText = "粉絲降溫 ($" + gameConfig.skillCooldownCost + ")";
+
+            // 動態判定按鈕是否可以按 (根據設定好的價錢)
+            document.getElementById('skill-destroy').disabled = (currentPlayerObj.money < gameConfig.skillDestroyCost || isDestroyMode || isAITurn);
+            document.getElementById('skill-cooldown').disabled = (currentPlayerObj.money < gameConfig.skillCooldownCost || isDestroyMode || isAITurn);
         }
 
         function logEvent(msg) {
             document.getElementById('event-log').innerText = msg;
         }
 
-        // === 處理卡牌點擊 ===
-        function handleBallClick(colIndex, color) {
+        function useSkillDestroy(isAI) {
+            if (!isAI && gameMode === 'pve' && currentTurn === aiSide) return; 
+            var currentPlayerObj = players[currentTurn];
+
+            // 扣除設定檔中的技能價錢
+            if (currentPlayerObj.money >= gameConfig.skillDestroyCost && !isDestroyMode) {
+                currentPlayerObj.money -= gameConfig.skillDestroyCost;
+                isDestroyMode = true; 
+                var userText = isAI ? "🤖 AI " : "🎬 玩家 ";
+                logEvent(userText + "使用【導演改命】！敲掉卡片...");
+                updateUI();
+            }
+        }
+
+        function useSkillCooldown(isAI) {
+            if (!isAI && gameMode === 'pve' && currentTurn === aiSide) return; 
+            var currentPlayerObj = players[currentTurn];
+
+            // 扣除設定檔中的技能價錢與降溫幅度
+            if (currentPlayerObj.money >= gameConfig.skillCooldownCost && !isDestroyMode) {
+                currentPlayerObj.money -= gameConfig.skillCooldownCost;
+                currentPlayerObj.temp = Math.max(0, currentPlayerObj.temp - gameConfig.skillCooldownEffect); 
+                var userText = isAI ? "🤖 AI " : "❄️ 玩家 ";
+                logEvent(userText + "使用【粉絲降溫】！溫度下降 " + gameConfig.skillCooldownEffect + "%。");
+                updateUI();
+            }
+        }
+
+        function handleBallClick(colIndex, color, isAI) {
+            if (!isAI && gameMode === 'pve' && currentTurn === aiSide) return;
+
             var currentPlayer = players[currentTurn];
             var opponentTurn = currentTurn === 'red' ? 'blue' : 'red';
             var opponentPlayer = players[opponentTurn];
 
-            logEvent("換對手回合..."); 
+            if (isDestroyMode) {
+                consumeAndSpawnBall(colIndex);
+                isDestroyMode = false;      
+                logEvent("💥 卡片已被敲掉。");
+                renderGrid();
+                updateUI();
+                
+                if (isAI) {
+                    logEvent("🤖 AI 重新評估盤面中...");
+                    aiTimeout = setTimeout(executeAITurn, 1000); 
+                }
+                return; 
+            }
 
-            // --- 數值判定區 ---
             switch (color) {
-                case 'red':
-                    // 紅火箭卡：金錢+100, 觀眾+30000, 己方PK+2, 溫度計+10%
-                    currentPlayer.money += 100; currentPlayer.viewers += 30000;
-                    currentPlayer.pk += 2; currentPlayer.temp += 10;
+                case 'yellow': 
+                    currentPlayer.money += gameConfig.yellowMoney; 
+                    currentPlayer.viewers += 30000; 
                     break;
-                case 'blue':
-                    // 藍盾牌卡：金錢+100, 觀眾+10000, 對手PK-1, 溫度計+15%
-                    currentPlayer.money += 100; currentPlayer.viewers += 10000;
-                    opponentPlayer.pk = Math.max(0, opponentPlayer.pk - 1);
-                    currentPlayer.temp += 15;
+                case 'green': 
+                    currentPlayer.money += 100; currentPlayer.viewers += 10000; 
+                    currentPlayer.temp = Math.max(0, currentPlayer.temp + gameConfig.greenTemp); 
                     break;
-                case 'green':
-                    // 綠愛心卡：金錢+100, 觀眾+10000, PK不變, 溫度計-20%
-                    currentPlayer.money += 100; currentPlayer.viewers += 10000;
-                    currentPlayer.temp = Math.max(0, currentPlayer.temp - 20);
+                case 'red': 
+                    currentPlayer.money += 100; currentPlayer.viewers += 10000; 
+                    currentPlayer.pk += gameConfig.redPk; 
+                    currentPlayer.temp += gameConfig.redTemp; 
                     break;
-                case 'purple':
-                    // 紫骷髏卡：金錢+100, 觀眾+10000, 己方PK+2, 溫度計+30%
-                    currentPlayer.money += 100; currentPlayer.viewers += 10000;
-                    currentPlayer.pk += 2; currentPlayer.temp += 30;
+                case 'blue': 
+                    currentPlayer.money += 100; currentPlayer.viewers += 10000; 
+                    currentPlayer.temp = Math.max(0, currentPlayer.temp + gameConfig.blueTemp); 
+                    opponentPlayer.temp += gameConfig.blueOppTemp; 
                     break;
-                case 'yellow':
-                    // 黃金錢卡：金錢+300, 觀眾+10000, PK不變, 溫度計+5%
-                    currentPlayer.money += 300; currentPlayer.viewers += 10000;
-                    currentPlayer.temp += 5;
+                case 'purple': 
+                    currentPlayer.money += 100; currentPlayer.viewers += 10000; 
+                    currentPlayer.temp += gameConfig.purpleTemp; 
                     break;
-                case 'gray':
-                    // 灰盲盒卡
-                    applyGrayCardEffect(currentPlayer);
+                case 'gray': 
+                    applyGrayCardEffect(currentPlayer); 
                     break;
             }
 
-            // 移除被點擊的球
-            gridCols[colIndex].shift();
-            
-            // 回合數 +1，並切換對手回合
+            consumeAndSpawnBall(colIndex);
             currentRound++; 
             currentTurn = opponentTurn;
             
             renderGrid();
             updateUI();
+            logEvent("換對手回合..."); 
 
-            // 延遲執行勝負判定，確保 UI 先完成繪製
             setTimeout(function() {
-                checkWinCondition();
+                var isGameOver = checkWinCondition();
+                if (!isGameOver && gameMode === 'pve' && currentTurn === aiSide) {
+                    logEvent("🤖 AI 分析盤面中...");
+                    aiTimeout = setTimeout(executeAITurn, 1500); 
+                }
             }, 50);
         }
 
-        // === 灰卡隨機事件 ===
+        // ==========================================
+        //         AI 智能決策核心邏輯
+        // ==========================================
+        function executeAITurn() {
+            if (currentTurn !== aiSide) return;
+
+            var aiObj = players[aiSide];
+            var humanObj = players[humanSide];
+
+            // 動態讀取設定檔的技能金錢要求
+            if (aiObj.temp >= (gameConfig.loseTemp * 0.6) && aiObj.money >= gameConfig.skillCooldownCost) {
+                useSkillCooldown(true); 
+                aiTimeout = setTimeout(executeAITurn, 1000); 
+                return;
+            }
+
+            var scores = [];
+            for (var col = 0; col < 3; col++) {
+                var color = gridCols[col][0];       
+                var nextColor = gridCols[col][1];   
+
+                var baseScore = evaluateBallLogic(color, aiObj, humanObj);
+                var opponentFutureScore = evaluateBallLogic(nextColor, humanObj, aiObj);
+                var finalScore = baseScore;
+                
+                if (baseScore < 4000) {
+                    if (opponentFutureScore >= 4000) {
+                        finalScore -= 10000; 
+                    } else {
+                        finalScore -= (opponentFutureScore * 0.6); 
+                    }
+                }
+                scores.push({ col: col, color: color, score: finalScore, baseScore: baseScore });
+            }
+
+            scores.sort(function(a, b) { return b.score - a.score; });
+            
+            var bestChoice = scores[0];
+            var worstChoice = scores[2]; 
+            var shouldDestroy = false;
+            
+            // AI 改命資金判定 (與開發者設定掛鉤，預留 500 作為餘裕)
+            if (aiObj.money >= gameConfig.skillDestroyCost) {
+                if (bestChoice.score <= -5000) shouldDestroy = true;
+                else if (bestChoice.score < 30) shouldDestroy = true;
+                else if (aiObj.money >= (gameConfig.skillDestroyCost + 500) && worstChoice.score < 20) shouldDestroy = true;
+            }
+
+            if (shouldDestroy) {
+                useSkillDestroy(true); 
+                setTimeout(function() {
+                    handleBallClick(worstChoice.col, worstChoice.color, true);
+                }, 800);
+                return;
+            }
+
+            handleBallClick(bestChoice.col, bestChoice.color, true);
+        }
+
+        function evaluateBallLogic(color, playerSelf, playerOpponent) {
+            var score = 0;
+            switch (color) {
+                case 'yellow': 
+                    score += 30; 
+                    break;
+                case 'green':
+                    if (playerSelf.temp >= (gameConfig.loseTemp * 0.65)) score += 200;
+                    else score += 40;
+                    break;
+                case 'red':
+                    if (playerSelf.temp + gameConfig.redTemp >= gameConfig.loseTemp) score -= 10000;
+                    else if (playerSelf.pk + gameConfig.redPk >= gameConfig.winPk) score += 5000; 
+                    else score += 60;
+                    break;
+                case 'blue':
+                    if (playerOpponent.temp + gameConfig.blueOppTemp >= gameConfig.loseTemp) score += 5000; 
+                    else {
+                        score += 80; 
+                        if (playerSelf.temp >= (gameConfig.loseTemp * 0.8)) score += 100; 
+                    }
+                    break;
+                case 'purple':
+                    if (playerSelf.temp + gameConfig.purpleTemp >= gameConfig.loseTemp) {
+                        score -= 10000;
+                    } else {
+                        score += 10; 
+                        if (playerSelf.temp <= (gameConfig.loseTemp * 0.2)) score += 15;
+                    }
+                    break;
+                case 'gray':
+                    if (playerSelf.temp >= (gameConfig.loseTemp * 0.7)) score -= 500;
+                    else score += 20;
+                    break;
+            }
+            return score;
+        }
+
         function applyGrayCardEffect(player) {
             var rand = Math.floor(Math.random() * 100) + 1; 
             var eventName = "";
-
-            if (rand <= 35) {
-                eventName = "空箱 (無效果)";
-            } else if (rand <= 55) {
-                eventName = "粉絲打賞 (金錢 +200)";
-                player.money += 200;
-            } else if (rand <= 75) {
-                eventName = "觀眾數量 (金錢 +500, 觀眾 +30000)";
-                player.money += 500;
-                player.viewers += 30000;
-            } else if (rand <= 95) {
-                eventName = "粉絲降溫 (溫度計 -10%)";
-                player.temp = Math.max(0, player.temp - 10);
-            } else {
-                eventName = "升溫 (溫度計 +5%)";
-                player.temp += 5;
-            }
-            logEvent("🎲 觸發灰盲盒：" + eventName);
+            if (rand <= 35) { eventName = "空箱 (無效果)"; } 
+            else if (rand <= 55) { eventName = "粉絲打賞 (金錢 +200)"; player.money += 200; } 
+            else if (rand <= 75) { eventName = "觀眾數量 (金錢 +500, 觀眾 +30000)"; player.money += 500; player.viewers += 30000; } 
+            // 動態讀取灰卡的升降溫設定
+            else if (rand <= 95) { eventName = "粉絲降溫 (溫度計 -" + gameConfig.grayTempDown + "%)"; player.temp = Math.max(0, player.temp - gameConfig.grayTempDown); } 
+            else { eventName = "升溫 (溫度計 +" + gameConfig.grayTempUp + "%)"; player.temp += gameConfig.grayTempUp; }
+            logEvent("🎲 盲盒效果：" + eventName);
         }
 
-        // === 勝負判定 ===
         function checkWinCondition() {
-            if (players.red.pk >= 7) {
-                alert("紅方達到 7 分！紅方獲勝！\n總共進行了 " + (currentRound - 1) + " 個回合。");
-                resetGame(); return;
-            } else if (players.blue.pk >= 7) {
-                alert("藍方達到 7 分！藍方獲勝！\n總共進行了 " + (currentRound - 1) + " 個回合。");
-                resetGame(); return;
-            }
-            
-            if (players.red.temp >= 100) {
-                alert("紅方溫度達到 100% 爆表！藍方獲勝！\n總共進行了 " + (currentRound - 1) + " 個回合。");
-                resetGame(); return;
-            } else if (players.blue.temp >= 100) {
-                alert("藍方溫度達到 100% 爆表！紅方獲勝！\n總共進行了 " + (currentRound - 1) + " 個回合。");
-                resetGame(); return;
-            }
+            var gameOver = false;
+            var msg = "";
 
-            var remainingBalls = gridCols[0].length + gridCols[1].length + gridCols[2].length;
-            if (remainingBalls === 0) {
-                if (players.red.pk > players.blue.pk) {
-                    alert("球數耗盡！結算分數：紅方獲勝！");
-                } else if (players.blue.pk > players.red.pk) {
-                    alert("球數耗盡！結算分數：藍方獲勝！");
-                } else {
-                    alert("球數耗盡！雙方分數相同，平手！");
-                }
+            if (players.red.temp >= gameConfig.loseTemp) { msg = "紅方溫度達到 " + gameConfig.loseTemp + "% 爆表！藍方獲勝！\n總共進行了 " + (currentRound - 1) + " 個回合。"; gameOver = true; } 
+            else if (players.blue.temp >= gameConfig.loseTemp) { msg = "藍方溫度達到 " + gameConfig.loseTemp + "% 爆表！紅方獲勝！\n總共進行了 " + (currentRound - 1) + " 個回合。"; gameOver = true; }
+            else if (players.red.pk >= gameConfig.winPk) { msg = "紅方達到 " + gameConfig.winPk + " 分！紅方獲勝！\n總共進行了 " + (currentRound - 1) + " 個回合。"; gameOver = true; } 
+            else if (players.blue.pk >= gameConfig.winPk) { msg = "藍方達到 " + gameConfig.winPk + " 分！藍方獲勝！\n總共進行了 " + (currentRound - 1) + " 個回合。"; gameOver = true; }
+
+            if (gameOver) {
+                alert(msg);
                 resetGame();
             }
+            return gameOver;
         }
 
-        // === 遊戲重置 ===
         function resetGame() {
             players.red = { pk: 0, temp: 0, money: 0, viewers: 0 };
             players.blue = { pk: 0, temp: 0, money: 0, viewers: 0 };
             currentTurn = 'red';
-            currentRound = 1; // 重新將回合數歸零
-            initGrid();
+            currentRound = 1; 
+            isDestroyMode = false;
+            clearTimeout(aiTimeout);
+
+            document.getElementById('game-container').style.display = 'none';
+            document.getElementById('start-screen').style.display = 'flex';
+            document.getElementById('mode-selection').style.display = 'block';
+            document.getElementById('side-selection').style.display = 'none';
         }
 
-        initGrid();
     </script>
 </body>
 </html>
