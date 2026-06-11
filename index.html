@@ -62,7 +62,7 @@
             flex-direction: column;
             align-items: center;
             padding: 20px;
-            overflow-y: auto; /* 允許上下滑動 */
+            overflow-y: auto; 
         }
 
         #dev-screen h2 { color: #ffeb3b; margin-bottom: 20px; }
@@ -88,6 +88,32 @@
         .btn-save { background-color: #4CAF50; color: white; }
         .btn-cancel { background-color: #f44336; color: white; }
 
+        /* --- 歷史紀錄面板 --- */
+        #history-screen {
+            position: fixed;
+            top: 10%; left: 10%; width: 80%; height: 80%;
+            background-color: rgba(0, 0, 0, 0.9);
+            border: 2px solid #fff; border-radius: 15px;
+            z-index: 150; display: none; flex-direction: column;
+            padding: 20px; box-shadow: 0px 10px 30px rgba(0,0,0,0.8);
+        }
+        
+        #history-screen h2 { color: #fff; margin-top: 0; text-align: center; border-bottom: 1px solid #555; padding-bottom: 10px; }
+        
+        #history-content {
+            flex: 1; overflow-y: auto; color: #ddd; font-size: 14px; line-height: 1.6; margin-bottom: 15px; padding-right: 10px;
+        }
+        
+        .history-entry { margin-bottom: 8px; border-bottom: 1px dashed #444; padding-bottom: 4px; }
+        .history-turn-red { color: #ff6b6b; }
+        .history-turn-blue { color: #64b5f6; }
+
+        #history-close-btn {
+            padding: 10px; font-size: 16px; font-weight: bold; background-color: #555; color: white;
+            border: none; border-radius: 8px; cursor: pointer;
+        }
+        #history-close-btn:active { background-color: #333; }
+
         /* --- 遊戲主畫面容器 --- */
         #game-container {
             display: none; 
@@ -96,7 +122,6 @@
             width: 100%;
         }
 
-        /* 兩側大人物立繪 */
         .character-art {
             position: fixed; top: 20px; height: 50vh; max-width: 35vw;
             object-fit: contain; pointer-events: none; z-index: 0; opacity: 0.9;
@@ -104,7 +129,6 @@
         .char-blue { left: 5px; }
         .char-red { right: 5px; }
 
-        /* 確保 UI 在立繪上方 */
         #round-display, #status-board, #game-board, #turn-indicator, #event-log, #skills-container {
             position: relative; z-index: 10; 
         }
@@ -119,15 +143,22 @@
         #event-log { font-size: 16px; color: #ffff80; margin-bottom: 15px; min-height: 20px; text-align: center; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); }
 
         #status-board {
-            display: flex; justify-content: space-between; width: 100%; max-width: 400px;
+            display: flex; justify-content: space-between; align-items: stretch; width: 100%; max-width: 400px;
             margin-bottom: 20px; padding: 10px; background: rgba(0, 0, 0, 0.7); border-radius: 10px;
         }
-        .player-status { width: 45%; display: flex; flex-direction: column; gap: 10px; }
+        .player-status { width: 40%; display: flex; flex-direction: column; gap: 10px; }
         .temp-bar-bg { width: 100%; height: 10px; background-color: #ccc; border-radius: 5px; overflow: hidden; }
         .temp-bar-fill { height: 100%; width: 0%; transition: width 0.3s ease; }
         #red-temp { background-color: red; }
         #blue-temp { background-color: blue; }
         .stats-text { font-size: 14px; line-height: 1.5; }
+
+        /* 歷史紀錄按鈕 (放在計分板中間) */
+        #history-btn {
+            width: 15%; align-self: center; background-color: transparent; border: 1px solid #fff; border-radius: 5px;
+            color: white; font-size: 12px; padding: 10px 2px; cursor: pointer; text-align: center;
+        }
+        #history-btn:active { background-color: rgba(255,255,255,0.3); }
 
         #game-board {
             display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; background-color: white;
@@ -175,13 +206,11 @@
 
     <div id="dev-screen">
         <h2>🔧 開發者模式</h2>
-        
         <div class="dev-group">
             <h3>基礎條件設定</h3>
             <div class="dev-item"><span>🏆 勝負分數線</span><input type="number" id="dev-winPk"></div>
             <div class="dev-item"><span>🔥 爆表溫度線</span><input type="number" id="dev-loseTemp"></div>
         </div>
-
         <div class="dev-group">
             <h3>初始機率設定 (%)</h3>
             <div class="dev-item"><span>🔴 紅卡機率</span><input type="number" id="dev-pRed"></div>
@@ -190,9 +219,7 @@
             <div class="dev-item"><span>🟡 黃卡機率</span><input type="number" id="dev-pYellow"></div>
             <div class="dev-item"><span>🔵 藍卡機率</span><input type="number" id="dev-pBlue"></div>
             <div class="dev-item"><span>⚪ 灰卡機率</span><input type="number" id="dev-pGray"></div>
-            <p style="font-size:12px; color:#aaa; margin-top:5px;">註: 25回合後紫卡與綠卡機率變化邏輯維持動態覆蓋。</p>
         </div>
-
         <div class="dev-group">
             <h3>卡牌數值設定 (一)</h3>
             <div class="dev-item"><span>🔴 紅卡：獲得分數 (PK)</span><input type="number" id="dev-redPk"></div>
@@ -205,7 +232,6 @@
             <hr style="border-color:#555; margin:10px 0;">
             <div class="dev-item"><span>🟣 紫卡：增加溫度 (%)</span><input type="number" id="dev-purpleTemp"></div>
         </div>
-
         <div class="dev-group">
             <h3>黃/灰卡與技能設定</h3>
             <div class="dev-item"><span>🟡 黃卡：獲得金錢</span><input type="number" id="dev-yellowMoney"></div>
@@ -217,11 +243,17 @@
             <div class="dev-item"><span>❄️ 粉絲降溫：花費金錢</span><input type="number" id="dev-skillCooldownCost"></div>
             <div class="dev-item"><span>❄️ 粉絲降溫：降溫幅度 (%)</span><input type="number" id="dev-skillCooldownEffect"></div>
         </div>
-
         <div class="dev-actions">
             <button class="btn-cancel" onclick="closeDevMode()">取消</button>
             <button class="btn-save" onclick="saveDevConfig()">保存設定</button>
         </div>
+    </div>
+
+    <div id="history-screen">
+        <h2>📜 歷史紀錄</h2>
+        <div id="history-content">
+            </div>
+        <button id="history-close-btn" onclick="closeHistory()">關閉紀錄</button>
     </div>
 
     <div id="game-container">
@@ -239,6 +271,9 @@
                     B PK: 0 / 7<br>溫度: 0%<br>💰: 0<br>👁‍🗨: 0
                 </div>
             </div>
+            
+            <button id="history-btn" onclick="openHistory()">📜<br>歷史<br>紀錄</button>
+
             <div class="player-status">
                 <div class="temp-bar-bg"><div id="red-temp" class="temp-bar-fill"></div></div>
                 <div class="stats-text" id="red-stats" style="text-align: right;">
@@ -256,9 +291,6 @@
     </div>
 
     <script>
-        // ==========================================
-        //         全域遊戲設定 (供開發者模式修改)
-        // ==========================================
         var gameConfig = {
             winPk: 7,               
             loseTemp: 100,          
@@ -268,15 +300,12 @@
             blueTemp: -10,          
             blueOppTemp: 15,        
             purpleTemp: 45,         
-            
-            // 新增變數
-            yellowMoney: 300,            // 黃卡金錢
-            grayTempDown: 10,            // 灰卡降溫幅度
-            grayTempUp: 5,               // 灰卡升溫幅度
-            skillDestroyCost: 1000,      // 導演改命花費
-            skillCooldownCost: 700,      // 粉絲降溫花費
-            skillCooldownEffect: 10,     // 粉絲降溫幅度
-            
+            yellowMoney: 300,            
+            grayTempDown: 10,            
+            grayTempUp: 5,               
+            skillDestroyCost: 1000,      
+            skillCooldownCost: 700,      
+            skillCooldownEffect: 10,     
             probs: {                
                 red: 30, green: 20, purple: 10, yellow: 15, blue: 10, gray: 15
             }
@@ -296,7 +325,9 @@
         var aiSide = null;
         var aiTimeout = null; 
 
-        // === 開發者模式 UI 控制 ===
+        // === 新增：歷史紀錄陣列 ===
+        var actionHistory = [];
+
         function openDevMode() {
             document.getElementById('start-screen').style.display = 'none';
             document.getElementById('dev-screen').style.display = 'flex';
@@ -317,7 +348,6 @@
             document.getElementById('dev-blueOppTemp').value = gameConfig.blueOppTemp;
             document.getElementById('dev-purpleTemp').value = gameConfig.purpleTemp;
 
-            // 綁定新增的輸入框
             document.getElementById('dev-yellowMoney').value = gameConfig.yellowMoney;
             document.getElementById('dev-grayTempDown').value = gameConfig.grayTempDown;
             document.getElementById('dev-grayTempUp').value = gameConfig.grayTempUp;
@@ -349,7 +379,6 @@
             gameConfig.blueOppTemp = parseInt(document.getElementById('dev-blueOppTemp').value) || 15;
             gameConfig.purpleTemp = parseInt(document.getElementById('dev-purpleTemp').value) || 45;
 
-            // 儲存新增的設定數值
             gameConfig.yellowMoney = parseInt(document.getElementById('dev-yellowMoney').value) || 300;
             gameConfig.grayTempDown = parseInt(document.getElementById('dev-grayTempDown').value) || 10;
             gameConfig.grayTempUp = parseInt(document.getElementById('dev-grayTempUp').value) || 5;
@@ -361,7 +390,6 @@
             closeDevMode();
         }
 
-        // === 介面切換函式 ===
         function showSideSelection() {
             document.getElementById('mode-selection').style.display = 'none';
             document.getElementById('side-selection').style.display = 'block';
@@ -381,6 +409,36 @@
             document.getElementById('game-container').style.display = 'flex';
             
             initGrid();
+        }
+
+        // === 新增：寫入歷史紀錄的函式 ===
+        function addHistory(actionText) {
+            var colorClass = (currentTurn === 'red') ? 'history-turn-red' : 'history-turn-blue';
+            var playerLabel = (currentTurn === 'red') ? '[紅方]' : '[藍方]';
+            var identityLabel = (gameMode === 'pve' && currentTurn === aiSide) ? '(AI) ' : '(玩家) ';
+            
+            var entryHTML = "<div class='history-entry " + colorClass + "'>" + 
+                            "<strong>回合 " + currentRound + "</strong> " + playerLabel + identityLabel + "<br>" + 
+                            actionText + 
+                            "</div>";
+            
+            actionHistory.push(entryHTML);
+        }
+
+        // === 新增：開啟與關閉歷史紀錄面板 ===
+        function openHistory() {
+            var historyBox = document.getElementById('history-content');
+            if (actionHistory.length === 0) {
+                historyBox.innerHTML = "<div style='text-align:center; color:#888;'>目前還沒有任何紀錄。</div>";
+            } else {
+                // 將陣列反轉，最新的紀錄顯示在最上面
+                historyBox.innerHTML = actionHistory.slice().reverse().join('');
+            }
+            document.getElementById('history-screen').style.display = 'flex';
+        }
+
+        function closeHistory() {
+            document.getElementById('history-screen').style.display = 'none';
         }
 
         function getRandomColor(round) {
@@ -418,6 +476,8 @@
 
         function initGrid() {
             gridCols = [[], [], []];
+            actionHistory = []; // 清空歷史紀錄
+            
             for (var col = 0; col < 3; col++) {
                 for (var i = 0; i < 3; i++) {
                     gridCols[col].push(getRandomColor(currentRound));
@@ -485,11 +545,9 @@
             document.getElementById('red-temp').style.width = Math.min(players.red.temp, gameConfig.loseTemp) + '%';
             document.getElementById('red-stats').innerHTML = 'R PK: ' + players.red.pk + ' / ' + gameConfig.winPk + '<br>溫度: ' + players.red.temp + '%<br>💰: ' + players.red.money + '<br>👁‍🗨: ' + players.red.viewers;
 
-            // 動態更新按鈕文字，顯示設定好的價錢
             document.getElementById('skill-destroy').innerText = "導演改命 ($" + gameConfig.skillDestroyCost + ")";
             document.getElementById('skill-cooldown').innerText = "粉絲降溫 ($" + gameConfig.skillCooldownCost + ")";
 
-            // 動態判定按鈕是否可以按 (根據設定好的價錢)
             document.getElementById('skill-destroy').disabled = (currentPlayerObj.money < gameConfig.skillDestroyCost || isDestroyMode || isAITurn);
             document.getElementById('skill-cooldown').disabled = (currentPlayerObj.money < gameConfig.skillCooldownCost || isDestroyMode || isAITurn);
         }
@@ -502,12 +560,15 @@
             if (!isAI && gameMode === 'pve' && currentTurn === aiSide) return; 
             var currentPlayerObj = players[currentTurn];
 
-            // 扣除設定檔中的技能價錢
             if (currentPlayerObj.money >= gameConfig.skillDestroyCost && !isDestroyMode) {
                 currentPlayerObj.money -= gameConfig.skillDestroyCost;
                 isDestroyMode = true; 
                 var userText = isAI ? "🤖 AI " : "🎬 玩家 ";
                 logEvent(userText + "使用【導演改命】！敲掉卡片...");
+                
+                // 寫入歷史紀錄
+                addHistory("發動技能：導演改命 (花費 $" + gameConfig.skillDestroyCost + ")");
+                
                 updateUI();
             }
         }
@@ -516,15 +577,23 @@
             if (!isAI && gameMode === 'pve' && currentTurn === aiSide) return; 
             var currentPlayerObj = players[currentTurn];
 
-            // 扣除設定檔中的技能價錢與降溫幅度
             if (currentPlayerObj.money >= gameConfig.skillCooldownCost && !isDestroyMode) {
                 currentPlayerObj.money -= gameConfig.skillCooldownCost;
                 currentPlayerObj.temp = Math.max(0, currentPlayerObj.temp - gameConfig.skillCooldownEffect); 
                 var userText = isAI ? "🤖 AI " : "❄️ 玩家 ";
                 logEvent(userText + "使用【粉絲降溫】！溫度下降 " + gameConfig.skillCooldownEffect + "%。");
+                
+                // 寫入歷史紀錄
+                addHistory("發動技能：粉絲降溫 (花費 $" + gameConfig.skillCooldownCost + "，溫度下降 " + gameConfig.skillCooldownEffect + "%)");
+                
                 updateUI();
             }
         }
+
+        // 定義顏色中文對照表供歷史紀錄使用
+        var colorNames = {
+            'red': '紅卡', 'blue': '藍卡', 'green': '綠卡', 'purple': '紫卡', 'yellow': '黃卡', 'gray': '灰盲盒卡'
+        };
 
         function handleBallClick(colIndex, color, isAI) {
             if (!isAI && gameMode === 'pve' && currentTurn === aiSide) return;
@@ -537,6 +606,10 @@
                 consumeAndSpawnBall(colIndex);
                 isDestroyMode = false;      
                 logEvent("💥 卡片已被敲掉。");
+                
+                // 寫入敲掉卡片的歷史紀錄
+                addHistory("敲碎卡片：第 " + (colIndex + 1) + " 列的 [" + colorNames[color] + "]");
+
                 renderGrid();
                 updateUI();
                 
@@ -547,33 +620,43 @@
                 return; 
             }
 
+            var cardDetail = ""; // 用來紀錄卡牌具體效果
+
             switch (color) {
                 case 'yellow': 
                     currentPlayer.money += gameConfig.yellowMoney; 
                     currentPlayer.viewers += 30000; 
+                    cardDetail = "獲得 $" + gameConfig.yellowMoney + " 與 30000 觀眾";
                     break;
                 case 'green': 
                     currentPlayer.money += 100; currentPlayer.viewers += 10000; 
                     currentPlayer.temp = Math.max(0, currentPlayer.temp + gameConfig.greenTemp); 
+                    cardDetail = "獲得 $100，溫度變化 " + gameConfig.greenTemp + "%";
                     break;
                 case 'red': 
                     currentPlayer.money += 100; currentPlayer.viewers += 10000; 
                     currentPlayer.pk += gameConfig.redPk; 
                     currentPlayer.temp += gameConfig.redTemp; 
+                    cardDetail = "獲得 $100，PK+" + gameConfig.redPk + "，溫度變化 +" + gameConfig.redTemp + "%";
                     break;
                 case 'blue': 
                     currentPlayer.money += 100; currentPlayer.viewers += 10000; 
                     currentPlayer.temp = Math.max(0, currentPlayer.temp + gameConfig.blueTemp); 
                     opponentPlayer.temp += gameConfig.blueOppTemp; 
+                    cardDetail = "獲得 $100，自身溫度變化 " + gameConfig.blueTemp + "%，對手溫度變化 +" + gameConfig.blueOppTemp + "%";
                     break;
                 case 'purple': 
                     currentPlayer.money += 100; currentPlayer.viewers += 10000; 
                     currentPlayer.temp += gameConfig.purpleTemp; 
+                    cardDetail = "獲得 $100，溫度變化 +" + gameConfig.purpleTemp + "%";
                     break;
                 case 'gray': 
-                    applyGrayCardEffect(currentPlayer); 
+                    cardDetail = applyGrayCardEffect(currentPlayer); 
                     break;
             }
+
+            // 寫入正常點擊卡片的歷史紀錄
+            addHistory("點擊卡片：第 " + (colIndex + 1) + " 列的 [" + colorNames[color] + "]<br>> 效果：" + cardDetail);
 
             consumeAndSpawnBall(colIndex);
             currentRound++; 
@@ -601,7 +684,6 @@
             var aiObj = players[aiSide];
             var humanObj = players[humanSide];
 
-            // 動態讀取設定檔的技能金錢要求
             if (aiObj.temp >= (gameConfig.loseTemp * 0.6) && aiObj.money >= gameConfig.skillCooldownCost) {
                 useSkillCooldown(true); 
                 aiTimeout = setTimeout(executeAITurn, 1000); 
@@ -633,7 +715,6 @@
             var worstChoice = scores[2]; 
             var shouldDestroy = false;
             
-            // AI 改命資金判定 (與開發者設定掛鉤，預留 500 作為餘裕)
             if (aiObj.money >= gameConfig.skillDestroyCost) {
                 if (bestChoice.score <= -5000) shouldDestroy = true;
                 else if (bestChoice.score < 30) shouldDestroy = true;
@@ -692,13 +773,36 @@
         function applyGrayCardEffect(player) {
             var rand = Math.floor(Math.random() * 100) + 1; 
             var eventName = "";
-            if (rand <= 35) { eventName = "空箱 (無效果)"; } 
-            else if (rand <= 55) { eventName = "粉絲打賞 (金錢 +200)"; player.money += 200; } 
-            else if (rand <= 75) { eventName = "觀眾數量 (金錢 +500, 觀眾 +30000)"; player.money += 500; player.viewers += 30000; } 
-            // 動態讀取灰卡的升降溫設定
-            else if (rand <= 95) { eventName = "粉絲降溫 (溫度計 -" + gameConfig.grayTempDown + "%)"; player.temp = Math.max(0, player.temp - gameConfig.grayTempDown); } 
-            else { eventName = "升溫 (溫度計 +" + gameConfig.grayTempUp + "%)"; player.temp += gameConfig.grayTempUp; }
+            var detailText = ""; // 用於回傳歷史紀錄
+            
+            if (rand <= 35) { 
+                eventName = "空箱 (無效果)"; 
+                detailText = "觸發 [空箱]，無事發生。";
+            } 
+            else if (rand <= 55) { 
+                eventName = "粉絲打賞 (金錢 +200)"; 
+                player.money += 200; 
+                detailText = "觸發 [粉絲打賞]，金錢 +$200。";
+            } 
+            else if (rand <= 75) { 
+                eventName = "觀眾數量 (金錢 +500, 觀眾 +30000)"; 
+                player.money += 500; 
+                player.viewers += 30000; 
+                detailText = "觸發 [觀眾數量]，金錢 +$500，觀眾 +30000。";
+            } 
+            else if (rand <= 95) { 
+                eventName = "粉絲降溫 (溫度計 -" + gameConfig.grayTempDown + "%)"; 
+                player.temp = Math.max(0, player.temp - gameConfig.grayTempDown); 
+                detailText = "觸發 [粉絲降溫]，溫度 -" + gameConfig.grayTempDown + "%。";
+            } 
+            else { 
+                eventName = "升溫 (溫度計 +" + gameConfig.grayTempUp + "%)"; 
+                player.temp += gameConfig.grayTempUp; 
+                detailText = "觸發 [升溫]，溫度 +" + gameConfig.grayTempUp + "%。";
+            }
+            
             logEvent("🎲 盲盒效果：" + eventName);
+            return detailText;
         }
 
         function checkWinCondition() {
